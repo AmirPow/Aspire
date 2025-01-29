@@ -1,5 +1,5 @@
 # Build stage
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 COPY ["ContentPlatform.Presentation/ContentPlatform.Presentation.csproj", "ContentPlatform.Presentation/"]
 RUN dotnet restore "./ContentPlatform.Presentation/ContentPlatform.Presentation.csproj"
