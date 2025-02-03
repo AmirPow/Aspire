@@ -1,4 +1,5 @@
 using ContentPlatform.Presentation;
+using ContentPlatform.Presentation.Services;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 
@@ -7,7 +8,7 @@ builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
-
+builder.Services.AddSingleton<SignalRService>();
 builder.Services.AddHttpClient("ContentPlatform.Api", client =>
 {
     client.BaseAddress = new Uri("https://localhost:5001");

@@ -1,7 +1,9 @@
 ﻿@page "/"
 @inject IHttpClientFactory HttpClientFactory
+@inject SignalRService SignalRService
 @using System.Text.Json
 @using System.Text.Json.Serialization
+@using ContentPlatform.Presentation.Services
 
 <PageTitle>Home</PageTitle>
 
@@ -74,6 +76,13 @@
     protected override async Task OnInitializedAsync()
     {
         await LoadArticles();
+        await SignalRService.StartConnection("https://localhost:5001/notificationHub");
+        SignalRService.OnUserAdded += async () =>
+        {
+	        await LoadArticles();
+	        StateHasChanged();
+        };
+
     }
 
     private async Task CreateArticle()

@@ -1,4 +1,5 @@
 ﻿using Carter;
+using ContentPlatform.Api.AspireHub;
 using ContentPlatform.Api.Database;
 using ContentPlatform.Api.Entities;
 using Contracts;
@@ -6,6 +7,7 @@ using FluentValidation;
 using Mapster;
 using MassTransit;
 using MediatR;
+using Microsoft.AspNetCore.SignalR;
 using Shared;
 
 namespace ContentPlatform.Api.Articles;
@@ -39,22 +41,15 @@ public static class CreateArticle
         }
     }
 
-    internal sealed class Handler : IRequestHandler<Command, Result<Guid>>
+    internal sealed class Handler(
+	    ApplicationDbContext dbContext,
+	    IValidator<Command> validator,
+	    IPublishEndpoint publishEndpoint)
+	    : IRequestHandler<Command, Result<Guid>>
     {
-        private readonly ApplicationDbContext _dbContext;
-        private readonly IValidator<Command> _validator;
-        private readonly IPublishEndpoint _publishEndpoint;
-
-        public Handler(ApplicationDbContext dbContext, IValidator<Command> validator, IPublishEndpoint publishEndpoint)
+	    public async Task<Result<Guid>> Handle(Command request, CancellationToken cancellationToken)
         {
-            _dbContext = dbContext;
-            _validator = validator;
-            _publishEndpoint = publishEndpoint;
-        }
-
-        public async Task<Result<Guid>> Handle(Command request, CancellationToken cancellationToken)
-        {
-            var validationResult = _validator.Validate(request);
+            var validationResult = validator.Validate(request);
             if (!validationResult.IsValid)
             {
                 return Result.Failure<Guid>(new Error(
@@ -71,11 +66,11 @@ public static class CreateArticle
                 CreatedOnUtc = DateTime.UtcNow
             };
 
-            _dbContext.Add(article);
+            dbContext.Add(article);
 
-            await _dbContext.SaveChangesAsync(cancellationToken);
+            await dbContext.SaveChangesAsync(cancellationToken);
 
-            await _publishEndpoint.Publish(
+            await publishEndpoint.Publish(
                 new ArticleCreatedEvent
                 {
                     Id = article.Id,
@@ -88,7 +83,7 @@ public static class CreateArticle
     }
 }
 
-public class CreateArticleEndpoint : ICarterModule
+public class CreateArticleEndpoint(IHubContext<NotificationHub> hubContext) : ICarterModule
 {
     public void AddRoutes(IEndpointRouteBuilder app)
     {
@@ -102,8 +97,8 @@ public class CreateArticleEndpoint : ICarterModule
             {
                 return Results.BadRequest(result.Error);
             }
-
-            return Results.Ok(result.Value);
+            await hubContext.Clients.All.SendAsync("Update");
+			return Results.Ok(result.Value);
         });
     }
 }
