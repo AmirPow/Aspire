@@ -2,6 +2,9 @@ services:
   contentplatform-api:
     image: ${DOCKER_REGISTRY-}contentplatform-api
     container_name: ContentPlatform.Api
+    depends_on:
+      - contentplatform-db
+      - contentplatform-mq
     build:
       context: .
       dockerfile: ContentPlatform.Api/Dockerfile
@@ -12,6 +15,9 @@ services:
   contentplatform-reporting-api:
     image: ${DOCKER_REGISTRY-}contentplatform-reporting-api
     container_name: ContentPlatform.Reporting.Api
+    depends_on:
+      - contentplatform-db
+      - contentplatform-mq
     build:
       context: .
       dockerfile: ContentPlatform.Reporting.Api/Dockerfile
@@ -24,8 +30,14 @@ services:
     container_name: ContentPlatform.Presentation
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
+    depends_on:
+      - contentplatform-db
+      - contentplatform-mq
     ports:
       - "3000:80"
+    build:
+      context: .
+      dockerfile: ContentPlatform.Presentation/Dockerfile
       
   contentplatform-db:
     image: postgres:latest

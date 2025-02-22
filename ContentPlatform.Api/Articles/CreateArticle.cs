@@ -49,7 +49,7 @@ public static class CreateArticle
     {
 	    public async Task<Result<Guid>> Handle(Command request, CancellationToken cancellationToken)
         {
-            var validationResult = validator.Validate(request);
+            var validationResult = await validator.ValidateAsync(request, cancellationToken);
             if (!validationResult.IsValid)
             {
                 return Result.Failure<Guid>(new Error(

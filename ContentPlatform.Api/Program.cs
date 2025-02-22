@@ -44,7 +44,8 @@ app.MapDefaultEndpoints();
 var allowedOrigins = new[] { "https://localhost:5001", "https://localhost:7098" };
 
 app.UseCors(policy =>
-		policy.WithOrigins(allowedOrigins) // Specify allowed origins
+		policy.WithOrigins(allowedOrigins) 
+			.SetIsOriginAllowed(origin => origin.StartsWith("http://localhost") || origin.StartsWith("https://localhost"))// Specify allowed origins
 			.AllowAnyMethod()
 			.AllowAnyHeader()
 			.AllowCredentials() // Allow credentials only with specific origins
